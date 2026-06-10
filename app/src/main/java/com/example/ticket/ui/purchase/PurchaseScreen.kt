@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.example.ticket.ui.theme.TransferAccent
+import com.example.ticket.ui.theme.TransferBg
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
@@ -531,7 +533,7 @@ fun PurchaseScreen(user: User) {
         ) {
             Text("共 ${filtered.size} 趟", fontSize = 11.sp, color = Color.Gray)
             if (transferPlans.isNotEmpty()) {
-                Text("换乘 ${transferPlans.size} 个", fontSize = 11.sp, color = Color(0xFFFF9800))
+                Text("换乘 ${transferPlans.size} 个", fontSize = 11.sp, color = TransferAccent)
             }
         }
         // 筛选对话框
@@ -723,7 +725,7 @@ fun PurchaseScreen(user: User) {
                             top = 6.dp,     // 与上方直达卡片距离
                             bottom = 4.dp   // 与标题距离
                         ),
-                        color = Color(0xFFFF9800),
+                        color = TransferAccent,
                         thickness = 1.dp
                     )
 
@@ -731,7 +733,7 @@ fun PurchaseScreen(user: User) {
                     Text(
                         "🔄 换乘方案",
                         fontSize = 12.sp,
-                        color = Color(0xFFFF9800),
+                        color = TransferAccent,
                         fontWeight = FontWeight.Medium,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
@@ -742,7 +744,7 @@ fun PurchaseScreen(user: User) {
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(bottom = 4.dp),  // 卡片之间 4dp
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                        colors = CardDefaults.cardColors(containerColor = TransferBg),
                         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
                         shape = RoundedCornerShape(6.dp)
                     ) {

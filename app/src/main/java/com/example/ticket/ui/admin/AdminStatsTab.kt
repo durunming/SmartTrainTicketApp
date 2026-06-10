@@ -1,4 +1,4 @@
-﻿package com.example.ticket
+package com.example.ticket
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -14,6 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ticket.ui.theme.StatsPurple
+import com.example.ticket.ui.theme.Success
+import com.example.ticket.ui.theme.TicketBlue
+import com.example.ticket.ui.theme.TicketBlueLight
+import com.example.ticket.ui.theme.Warning
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -84,7 +89,7 @@ fun AdminStatsScreen(db: DatabaseReference) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
-                Text("订单统计", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+                Text("订单统计", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TicketBlue)
                 Spacer(Modifier.height(12.dp))
 
                 Row(
@@ -93,15 +98,15 @@ fun AdminStatsScreen(db: DatabaseReference) {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("总订单", fontSize = 11.sp, color = Color.Gray)
-                        Text("$totalOrders", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+                        Text("$totalOrders", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TicketBlue)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("待支付", fontSize = 11.sp, color = Color.Gray)
-                        Text("$pendingOrders", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF9800))
+                        Text("$pendingOrders", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Warning)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("总收入", fontSize = 11.sp, color = Color.Gray)
-                        Text("￥$totalRevenue", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                        Text("￥$totalRevenue", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Success)
                     }
                 }
             }
@@ -119,7 +124,7 @@ fun AdminStatsScreen(db: DatabaseReference) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
-                Text("系统数据", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+                Text("系统数据", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TicketBlue)
                 Spacer(Modifier.height(12.dp))
 
                 Row(
@@ -128,11 +133,11 @@ fun AdminStatsScreen(db: DatabaseReference) {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("用户数", fontSize = 11.sp, color = Color.Gray)
-                        Text("$totalUsers", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2196F3))
+                        Text("$totalUsers", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = TicketBlueLight)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("车次数", fontSize = 11.sp, color = Color.Gray)
-                        Text("$totalTrains", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Color(0xFF9C27B0))
+                        Text("$totalTrains", fontSize = 20.sp, fontWeight = FontWeight.Bold, color = StatsPurple)
                     }
                 }
             }
@@ -154,7 +159,7 @@ fun AdminStatsScreen(db: DatabaseReference) {
                 }.start()
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+            colors = ButtonDefaults.buttonColors(containerColor = Warning),
             shape = RoundedCornerShape(8.dp)
         ) {
             Text("批量生成测试车次", fontSize = 14.sp, color = Color.White)

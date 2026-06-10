@@ -14,6 +14,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ticket.ui.theme.Danger
+import com.example.ticket.ui.theme.StatusPaidBgLight
+import com.example.ticket.ui.theme.Success
+import com.example.ticket.ui.theme.SurfaceGray
+import com.example.ticket.ui.theme.TextSecondary
+import com.example.ticket.ui.theme.TicketBlue
+import com.example.ticket.ui.theme.TicketBlueBg
+import com.example.ticket.ui.theme.TicketBlueLight
+import com.example.ticket.ui.theme.TransferBg
+import com.example.ticket.ui.theme.Warning
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -99,14 +109,14 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                     Surface(
                         modifier = Modifier.size(60.dp),
                         shape = CircleShape,
-                        color = Color(0xFFE3F2FD)
+                        color = TicketBlueBg
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Text(
                                 user.username.take(1).uppercase(),
                                 fontSize = 24.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1565C0)
+                                color = TicketBlue
                             )
                         }
                     }
@@ -133,9 +143,9 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                     Text("系统状态", fontSize = 13.sp, color = Color.Gray)
                     Surface(
                         color = when {
-                            status.contains("完成") -> Color(0xFFE8F5E9)
-                            status.contains("中") -> Color(0xFFFFF3E0)
-                            else -> Color(0xFFF5F5F5)
+                            status.contains("完成") -> Success
+                            status.contains("中") -> Warning
+                            else -> SurfaceGray
                         },
                         shape = RoundedCornerShape(4.dp)
                     ) {
@@ -144,8 +154,8 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                             fontSize = 11.sp,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                             color = when {
-                                status.contains("完成") -> Color(0xFF4CAF50)
-                                status.contains("中") -> Color(0xFFFF9800)
+                                status.contains("完成") -> Success
+                                status.contains("中") -> Warning
                                 else -> Color.Gray
                             }
                         )
@@ -163,15 +173,15 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("总订单", fontSize = 11.sp, color = Color.Gray)
-                        Text("$totalOrders", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+                        Text("$totalOrders", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TicketBlue)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("待支付", fontSize = 11.sp, color = Color.Gray)
-                        Text("$pendingOrders", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFFFF9800))
+                        Text("$pendingOrders", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Warning)
                     }
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("已完成", fontSize = 11.sp, color = Color.Gray)
-                        Text("$completedOrders", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                        Text("$completedOrders", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Success)
                     }
                 }
             }
@@ -189,7 +199,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(16.dp)
             ) {
-                Text("系统操作", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1565C0))
+                Text("系统操作", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = TicketBlue)
                 Spacer(Modifier.height(12.dp))
 
                 // 更新数据按钮
@@ -217,7 +227,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                     },
                     enabled = !loading,
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Warning),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(if (loading) "更新中..." else "更新全国铁路数据", fontSize = 14.sp, color = Color.White)
@@ -231,7 +241,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFF2196F3)
+                        contentColor = TicketBlueLight
                     )
                 ) {
                     Text("修改密码", fontSize = 14.sp)
@@ -243,7 +253,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                 Button(
                     onClick = { showLogoutDialog = true },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)),
+                    colors = ButtonDefaults.buttonColors(containerColor = Danger),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text("退出登录", fontSize = 14.sp, color = Color.White)
@@ -256,13 +266,13 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
         // 说明卡片
         Card(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
+            colors = CardDefaults.cardColors(containerColor = SurfaceGray),
             shape = RoundedCornerShape(8.dp)
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth().padding(12.dp)
             ) {
-                Text("说明", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFF757575))
+                Text("说明", fontSize = 12.sp, fontWeight = FontWeight.Medium, color = TextSecondary)
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "• 点击可更新全量车次数据\n• 该操作会覆盖现有数据库内容",
@@ -341,7 +351,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                                 }
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+                    colors = ButtonDefaults.buttonColors(containerColor = Success)
                 ) {
                     Text("确认")
                 }
@@ -367,7 +377,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
             confirmButton = {
                 Button(
                     onClick = onLogout,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350))
+                    colors = ButtonDefaults.buttonColors(containerColor = Danger)
                 ) {
                     Text("退出", color = Color.White)
                 }

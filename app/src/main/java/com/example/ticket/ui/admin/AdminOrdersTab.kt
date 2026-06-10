@@ -1,4 +1,4 @@
-﻿package com.example.ticket
+package com.example.ticket
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -16,6 +16,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ticket.ui.theme.Danger
+import com.example.ticket.ui.theme.StatusCancelledChip
+import com.example.ticket.ui.theme.StatusPaidBg
+import com.example.ticket.ui.theme.StatusPendingChip
+import com.example.ticket.ui.theme.Warning
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
@@ -117,9 +122,9 @@ fun AdminOrdersScreen(db: DatabaseReference) {
                             // 状态标签（与用户订单页面一致）
                             Surface(
                                 color = when (order.status) {
-                                    "待支付" -> Color(0xFFFFCDD2)
-                                    "已支付" -> Color(0xFFC8E6C9)
-                                    else -> Color(0xFFE0E0E0)
+                                    "待支付" -> StatusPendingChip
+                                    "已支付" -> StatusPaidBg
+                                    else -> StatusCancelledChip
                                 },
                                 shape = MaterialTheme.shapes.small
                             ) {
@@ -205,7 +210,7 @@ fun AdminOrdersScreen(db: DatabaseReference) {
                                         },
                                         modifier = Modifier.weight(1f).height(36.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFFF9800)
+                                            containerColor = Warning
                                         ),
                                         contentPadding = PaddingValues(0.dp)
                                     ) {
@@ -249,7 +254,7 @@ fun AdminOrdersScreen(db: DatabaseReference) {
                                         },
                                         modifier = Modifier.weight(1f).height(36.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFEF5350)
+                                            containerColor = Danger
                                         ),
                                         contentPadding = PaddingValues(0.dp)
                                     ) {
@@ -355,7 +360,7 @@ fun AdminOrdersScreen(db: DatabaseReference) {
                         showDeleteDialog = false
                         orderToDelete = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350))
+                    colors = ButtonDefaults.buttonColors(containerColor = Danger)
                 ) {
                     Text("确认删除", color = Color.White)
                 }

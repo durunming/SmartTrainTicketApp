@@ -15,6 +15,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.example.ticket.ui.theme.DangerSoft
+import com.example.ticket.ui.theme.DisabledGray
+import com.example.ticket.ui.theme.StatusCancelledChip
+import com.example.ticket.ui.theme.StatusPaidBg
+import com.example.ticket.ui.theme.StatusPendingChip
+import com.example.ticket.ui.theme.SuccessSoft
+import com.example.ticket.ui.theme.WarningSoft
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
@@ -99,9 +106,9 @@ fun OrdersScreen(user: User) {
                             // 状态标签
                             Surface(
                                 color = when (o.status) {
-                                    "待支付" -> Color(0xFFFFCDD2)
-                                    "已支付" -> Color(0xFFC8E6C9)
-                                    else -> Color(0xFFE0E0E0)
+                                    "待支付" -> StatusPendingChip
+                                    "已支付" -> StatusPaidBg
+                                    else -> StatusCancelledChip
                                 },
                                 shape = MaterialTheme.shapes.small
                             ) {
@@ -175,7 +182,7 @@ fun OrdersScreen(user: User) {
                                         modifier = Modifier.weight(1f).height(40.dp),
                                         shape = MaterialTheme.shapes.small,
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFF81C784)  // 柔和的绿色
+                                            containerColor = SuccessSoft
                                         )
                                     ) {
                                         Text("✓ 支付", fontSize = 13.sp, color = Color.White)
@@ -207,7 +214,7 @@ fun OrdersScreen(user: User) {
                                         modifier = Modifier.weight(1f).height(40.dp),
                                         shape = MaterialTheme.shapes.small,
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFFFFB74D)  // 柔和的橙色
+                                            containerColor = WarningSoft
                                         )
                                     ) {
                                         Text("✗ 取消", fontSize = 13.sp, color = Color.White)
@@ -228,7 +235,7 @@ fun OrdersScreen(user: User) {
                                     modifier = Modifier.fillMaxWidth().height(40.dp),
                                     shape = MaterialTheme.shapes.small,
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFFEF9A9A)  // 柔和的红色
+                                        containerColor = DangerSoft
                                     )
                                 ) {
                                     Text("🗑 删除订单", fontSize = 13.sp, color = Color.White)
@@ -248,7 +255,7 @@ fun OrdersScreen(user: User) {
                                     modifier = Modifier.fillMaxWidth().height(40.dp),
                                     shape = MaterialTheme.shapes.small,
                                     colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = Color(0xFF9E9E9E)  // 柔和的灰色
+                                        contentColor = DisabledGray
                                     )
                                 ) {
                                     Text("🗑 删除订单", fontSize = 13.sp)

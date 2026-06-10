@@ -18,6 +18,17 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.example.ticket.ui.theme.Danger
+import com.example.ticket.ui.theme.PriceRed
+import com.example.ticket.ui.theme.StatusPaidBgLight
+import com.example.ticket.ui.theme.Success
+import com.example.ticket.ui.theme.SurfaceGray
+import com.example.ticket.ui.theme.SurfaceGrayLight
+import com.example.ticket.ui.theme.TextSecondary
+import com.example.ticket.ui.theme.TicketBlue
+import com.example.ticket.ui.theme.TicketBlueBg
+import com.example.ticket.ui.theme.TicketBlueLight
+import com.example.ticket.ui.theme.TransferBg
 import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -63,7 +74,7 @@ fun AdminTrainsScreen(db: DatabaseReference) {
         Button(
             onClick = { showDialog = true },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            colors = ButtonDefaults.buttonColors(containerColor = Success)
         ) {
             Text("+ 添加车次", fontSize = 14.sp, color = Color.White)
         }
@@ -94,12 +105,12 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                train.id,
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1565C0)
-                            )
+                        Text(
+                            train.id,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TicketBlue
+                        )
                             Text(
                                 "${train.from} → ${train.to}",
                                 fontSize = 13.sp,
@@ -127,10 +138,10 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                             train.seatPrices.forEach { seat ->
                                 Surface(
                                     color = when {
-                                        seat.remaining == 0 -> Color(0xFFEEEEEE)
-                                        seat.type == "二等座" -> Color(0xFFE8F5E9)
-                                        seat.type == "一等座" -> Color(0xFFFFF3E0)
-                                        else -> Color(0xFFE3F2FD)
+                                        seat.remaining == 0 -> SurfaceGrayLight
+                                        seat.type == "二等座" -> StatusPaidBgLight
+                                        seat.type == "一等座" -> TransferBg
+                                        else -> TicketBlueBg
                                     },
                                     shape = RoundedCornerShape(12.dp)
                                 ) {
@@ -142,16 +153,16 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                                         Text(
                                             seat.type,
                                             fontSize = 10.sp,
-                                            color = if (seat.remaining == 0) Color.Gray else Color(0xFF757575)
+                                            color = if (seat.remaining == 0) Color.Gray else TextSecondary
                                         )
                                         Text(
                                             "￥${seat.price}",
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = Color(0xFFD32F2F)
+                                            color = PriceRed
                                         )
                                         Surface(
-                                            color = if (seat.remaining > 0) Color(0xFF4CAF50) else Color(0xFFEF5350),
+                                            color = if (seat.remaining > 0) Success else Danger,
                                             shape = RoundedCornerShape(8.dp)
                                         ) {
                                             Text(
@@ -176,11 +187,11 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(
-                                    "经停站",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF757575)
+                            Text(
+                                "经停站",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = TextSecondary
                                 )
                                 Text(
                                     "${train.stops.size}站",
@@ -198,16 +209,16 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                                 horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 train.stops.forEach { stop ->
-                                    Surface(
-                                        color = Color(0xFFF5F5F5),
-                                        shape = RoundedCornerShape(4.dp)
+                                Surface(
+                                    color = SurfaceGray,
+                                    shape = RoundedCornerShape(4.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
                                     ) {
-                                        Column(
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Text(
-                                                stop.station,
+                                        Text(
+                                            stop.station,
                                                 fontSize = 10.sp,
                                                 fontWeight = FontWeight.Medium
                                             )
@@ -228,12 +239,12 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            OutlinedButton(
-                                onClick = { editTrain = train },
-                                modifier = Modifier.weight(1f).height(36.dp),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text("编辑", fontSize = 12.sp, color = Color(0xFF2196F3))
+                        OutlinedButton(
+                            onClick = { editTrain = train },
+                            modifier = Modifier.weight(1f).height(36.dp),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text("编辑", fontSize = 12.sp, color = TicketBlueLight)
                             }
 
                             Button(
@@ -247,7 +258,7 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                                         })
                                 },
                                 modifier = Modifier.weight(1f).height(36.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF5350)),
+                                colors = ButtonDefaults.buttonColors(containerColor = Danger),
                                 shape = RoundedCornerShape(6.dp)
                             ) {
                                 Text("删除", fontSize = 12.sp, color = Color.White)
@@ -356,17 +367,17 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                     Text("票价与余量设置", fontSize = 12.sp, fontWeight = FontWeight.Bold)
 
                     // 二等座
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                        shape = RoundedCornerShape(6.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceGray),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("二等座", fontSize = 12.sp, modifier = Modifier.width(50.dp))
+                        Text("二等座", fontSize = 12.sp, modifier = Modifier.width(50.dp))
                             OutlinedTextField(
                                 value = price2,
                                 onValueChange = {
@@ -395,17 +406,17 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                     }
 
                     // 一等座
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                        shape = RoundedCornerShape(6.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceGray),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("一等座", fontSize = 12.sp, modifier = Modifier.width(50.dp))
+                        Text("一等座", fontSize = 12.sp, modifier = Modifier.width(50.dp))
                             OutlinedTextField(
                                 value = price1,
                                 onValueChange = {
@@ -434,17 +445,17 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                     }
 
                     // 无座
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                        shape = RoundedCornerShape(6.dp)
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = SurfaceGray),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("无座", fontSize = 12.sp, modifier = Modifier.width(50.dp))
+                        Text("无座", fontSize = 12.sp, modifier = Modifier.width(50.dp))
                             OutlinedTextField(
                                 value = price3,
                                 onValueChange = {
@@ -490,7 +501,7 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                                 showAddStopDialog = true
                             }
                         ) {
-                            Text("+ 添加", fontSize = 11.sp, color = Color(0xFF4CAF50))
+                            Text("+ 添加", fontSize = 11.sp, color = Success)
                         }
                     }
 
@@ -503,11 +514,11 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                         )
                     } else {
                         stopsList.forEachIndexed { index, stop ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5)),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = SurfaceGray),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth().padding(10.dp),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -531,7 +542,7 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                                                 showAddStopDialog = true
                                             }
                                         ) {
-                                            Text("编辑", fontSize = 10.sp, color = Color(0xFF2196F3))
+                                            Text("编辑", fontSize = 10.sp, color = TicketBlueLight)
                                         }
                                         TextButton(
                                             onClick = { stopsList.removeAt(index) }
@@ -576,9 +587,9 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                         showDialog = false
                         editTrain = null
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                ) {
-                    Text("保存", color = Color.White)
+                colors = ButtonDefaults.buttonColors(containerColor = Success)
+            ) {
+                Text("保存", color = Color.White)
                 }
             },
             dismissButton = {
@@ -648,9 +659,9 @@ fun AdminTrainsScreen(db: DatabaseReference) {
                             }
                             showAddStopDialog = false
                         },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
-                    ) {
-                        Text("确定", color = Color.White)
+                    colors = ButtonDefaults.buttonColors(containerColor = Success)
+                ) {
+                    Text("确定", color = Color.White)
                     }
                 },
                 dismissButton = {

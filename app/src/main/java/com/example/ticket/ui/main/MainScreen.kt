@@ -2,7 +2,10 @@ package com.example.ticket
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -18,6 +21,11 @@ fun MainScreen(user: User, onLogout: () -> Unit) {
     else
         listOf("购票", "订单", "我的")
 
+    val icons = if (isAdmin)
+        listOf(Icons.Default.Search, Icons.Default.Star, Icons.Default.Settings, Icons.Default.Person)
+    else
+        listOf(Icons.Default.Search, Icons.Default.Star, Icons.Default.Person)
+
     Scaffold(
         bottomBar = {
             NavigationBar {
@@ -26,7 +34,7 @@ fun MainScreen(user: User, onLogout: () -> Unit) {
                         selected = tab == i,
                         onClick = { tab = i },
                         label = { Text(t) },
-                        icon = { Icon(Icons.Default.Check, contentDescription = t) }
+                        icon = { Icon(icons[i], contentDescription = t) }
                     )
                 }
             }
