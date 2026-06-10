@@ -1,4 +1,4 @@
-package com.example.ticket
+﻿package com.example.ticket
 
 import android.app.DatePickerDialog
 import androidx.compose.foundation.horizontalScroll
@@ -83,132 +83,6 @@ fun PurchaseScreen(user: User) {
     val arrivalRanges = listOf("全部", "00:00-06:00", "06:00-12:00", "12:00-18:00", "18:00-24:00")
 
 
-    /* ================= 时间工具 ================= */
-
-    fun toMin(t: String): Int {
-        val clean = t.trim()
-        val p = clean.split(":")
-        if (p.size != 2) return 0
-        val h = p[0].trim().toIntOrNull() ?: 0
-        val m = p[1].trim().toIntOrNull() ?: 0
-        return h * 60 + m
-    }
-
-    fun passengerSegment(ticket: TrainTicket, start: String, end: String): Pair<String, String> {
-
-        val startTime = if (start == ticket.from) {
-            ticket.departure
-        } else {
-            ticket.stops.firstOrNull {
-                it.station.equals(start, true)
-            }?.departure ?: ticket.departure
-        }
-
-        //如果到达站为空，则使用列车的终点站
-        val endTime = if (end.isBlank()) {
-            // 到达站为空时，使用列车终点站
-            ticket.arrival
-        } else if (end == ticket.to) {
-            ticket.arrival
-        } else {
-            ticket.stops.firstOrNull {
-                it.station.contains(end, true)
-            }?.arrival ?: ticket.arrival
-        }
-
-        return startTime to endTime
-    }
-
-    fun transferGap(first: TrainTicket, second: TrainTicket, transferStation: String): String {
-
-        val firstArrivalTime = first.stops
-            .firstOrNull { it.station.equals(transferStation, true) }
-            ?.arrival ?: first.arrival
-
-        val secondDepartureTime = second.stops
-            .firstOrNull { it.station.equals(transferStation, true) }
-            ?.departure ?: second.departure
-
-        val gap = toMin(secondDepartureTime) - toMin(firstArrivalTime)
-
-        return if (gap >= 10) "${gap}分钟" else "时间冲突"
-    }
-
-    // 判断是否跨天（到达时间小于发车时间）
-    fun isCrossDay(departure: String, arrival: String): Boolean {
-        return toMin(arrival) < toMin(departure)
-    }
-
-    //辅助函数判断时间区间
-    fun isTimeInRange(time: String, range: String): Boolean {
-        if (range == "全部") return true
-        val timeMinutes = toMin(time)
-        val (start, end) = range.split("-")
-        val startMinutes = toMin(start)
-        val endMinutes = toMin(end)
-        return timeMinutes in startMinutes until endMinutes
-    }
-
-    fun sortTickets(list: List<TrainTicket>): List<TrainTicket> {
-
-        val sorted = when (sortType) {
-
-            "发车时间" -> list.sortedBy {
-                toMin(
-                    if (
-                        queryTab == 0 &&
-                        fromStation.isNotBlank() &&
-                        toStation.isNotBlank()
-                    ) {
-                        passengerSegment(it, fromStation, toStation).first
-                    } else {
-                        it.departure
-                    }
-                )
-            }
-
-            "到达时间" -> list.sortedBy {
-                toMin(
-                    if (
-                        queryTab == 0 &&
-                        fromStation.isNotBlank() &&
-                        toStation.isNotBlank()
-                    ) {
-                        passengerSegment(it, fromStation, toStation).second
-                    } else {
-                        it.arrival
-                    }
-                )
-            }
-
-            "最低票价" -> list.sortedBy {
-                it.seatPrices.minOfOrNull { s -> s.price } ?: 0
-            }
-
-            "余票最多" -> list.sortedByDescending {
-                it.seatPrices.sumOf { s -> s.remaining }
-            }
-
-            else -> list
-        }
-
-        return if (ascending) sorted else sorted.reversed()
-    }
-
-    /* ================= 过滤逻辑 ================= */
-    fun checkTrainTypeMatch(ticket: TrainTicket): Boolean {
-        val isHighSpeed = ticket.id.startsWith("G")
-        val isDongche = ticket.id.startsWith("D")
-        val isNormalTrain = !isHighSpeed && !isDongche
-
-        return when {
-            onlyHighSpeed -> isHighSpeed
-            onlyDongche -> isDongche
-            onlyNormalTrain -> isNormalTrain
-            else -> true
-        }
-    }
-
     fun applyFilter() {
         transferPlans = emptyList()
 
@@ -219,15 +93,9 @@ fun PurchaseScreen(user: User) {
         filtered = when (queryTab) {
 
             0 -> {
-                fun timeline(t: TrainTicket): List<Pair<String, String>> {
-                    return listOf(t.from to t.departure) +
-                            t.stops.map { it.station to it.arrival } +
-                            listOf(t.to to t.arrival)
-                }
-
                 // ================= 直达方案计算 ================= //
                 val direct = dateFiltered.filter { t ->
-                    val line = timeline(t)
+                    val line = TrainQueryEngine.timeline(t)
                     // 排除终点站就是出发站的车次
                     if (t.to.equals(fromStation, ignoreCase = true)) return@filter false
                     // 情况1：出发站和到达站都为空 → 显示所有车次
@@ -258,8 +126,8 @@ fun PurchaseScreen(user: User) {
                         dateFiltered.forEach { b ->
                             if (a.id == b.id) return@forEach
 
-                            val aLine = timeline(a)
-                            val bLine = timeline(b)
+                            val aLine = TrainQueryEngine.timeline(a)
+                            val bLine = TrainQueryEngine.timeline(b)
 
                             // 检查第一段是否经过出发站
                             val aIdxFrom = aLine.indexOfFirst { it.first.equals(fromStation, ignoreCase = true) }
@@ -307,7 +175,7 @@ fun PurchaseScreen(user: User) {
                                     }?.departure ?: return@forEach
                                 }
 
-                                val gap = toMin(bDepartureTime) - toMin(aArrivalTime)
+                                val gap = TrainQueryEngine.toMin(bDepartureTime) - TrainQueryEngine.toMin(aArrivalTime)
 
                                 // 换乘时间合理范围：10分钟到6小时
                                 if (gap in 10..360) {
@@ -328,19 +196,19 @@ fun PurchaseScreen(user: User) {
                         if (onlyAvailable && (!firstHasTicket || !secondHasTicket)) return@filter false
 
                         // 2. 车型筛选（两段都要匹配）
-                        val firstTypeMatch = checkTrainTypeMatch(first)
-                        val secondTypeMatch = checkTrainTypeMatch(second)
+                        val firstTypeMatch = TrainQueryEngine.checkTrainTypeMatch(first, onlyHighSpeed, onlyDongche, onlyNormalTrain)
+                        val secondTypeMatch = TrainQueryEngine.checkTrainTypeMatch(second, onlyHighSpeed, onlyDongche, onlyNormalTrain)
                         if (!firstTypeMatch || !secondTypeMatch) return@filter false
 
                         // 3. 发车时间筛选：只看第一段的发车时间
                         val departureMatch = if (selectedDepartureRange != "全部") {
-                            isTimeInRange(first.departure, selectedDepartureRange)
+                            TrainQueryEngine.isTimeInRange(first.departure, selectedDepartureRange)
                         } else true
                         if (!departureMatch) return@filter false
 
                         // 4. 到达时间筛选：只看第二段的到达时间
                         val arrivalMatch = if (selectedArrivalRange != "全部") {
-                            isTimeInRange(second.arrival, selectedArrivalRange)
+                            TrainQueryEngine.isTimeInRange(second.arrival, selectedArrivalRange)
                         } else true
                         if (!arrivalMatch) return@filter false
 
@@ -349,7 +217,7 @@ fun PurchaseScreen(user: User) {
 
                     // 对换乘方案排序（根据第一段的发车时间）
                     transferPlans = filteredPlans.sortedBy {
-                        toMin(it.first.departure)
+                        TrainQueryEngine.toMin(it.first.departure)
                     }
                     if (!ascending) transferPlans = transferPlans.reversed()
                 }
@@ -363,30 +231,30 @@ fun PurchaseScreen(user: User) {
                             // 有票筛选
                             if (onlyAvailable && ticket.seatPrices.none { it.remaining > 0 }) return@filter false
                             // 车型筛选
-                            if (!checkTrainTypeMatch(ticket)) return@filter false
+                            if (!TrainQueryEngine.checkTrainTypeMatch(ticket, onlyHighSpeed, onlyDongche, onlyNormalTrain)) return@filter false
                             // 发车时间筛选
                             val actualDeparture = if (fromStation.isNotBlank() && toStation.isNotBlank()) {
-                                passengerSegment(ticket, fromStation, toStation).first
+                                TrainQueryEngine.passengerSegment(ticket, fromStation, toStation).first
                             } else if (fromStation.isNotBlank()) {
-                                passengerSegment(ticket, fromStation, ticket.to).first
+                                TrainQueryEngine.passengerSegment(ticket, fromStation, ticket.to).first
                             } else {
                                 ticket.departure
                             }
-                            if (!isTimeInRange(actualDeparture, selectedDepartureRange)) return@filter false
+                            if (!TrainQueryEngine.isTimeInRange(actualDeparture, selectedDepartureRange)) return@filter false
                             // 到达时间筛选
                             val actualArrival = if (fromStation.isNotBlank() && toStation.isNotBlank()) {
-                                passengerSegment(ticket, fromStation, toStation).second
+                                TrainQueryEngine.passengerSegment(ticket, fromStation, toStation).second
                             } else if (toStation.isNotBlank()) {
-                                passengerSegment(ticket, ticket.from, toStation).second
+                                TrainQueryEngine.passengerSegment(ticket, ticket.from, toStation).second
                             } else {
                                 ticket.arrival
                             }
-                            if (!isTimeInRange(actualArrival, selectedArrivalRange)) return@filter false
+                            if (!TrainQueryEngine.isTimeInRange(actualArrival, selectedArrivalRange)) return@filter false
 
                             true
                         }
                         // 排序
-                        filteredDirect = sortTickets(filteredDirect)
+                        filteredDirect = TrainQueryEngine.sortTickets(filteredDirect, sortType, ascending, fromStation, toStation, queryTab)
                         filteredDirect
                     }
                 }
@@ -401,12 +269,12 @@ fun PurchaseScreen(user: User) {
                 // 应用筛选
                 result = result.filter { ticket ->
                     if (onlyAvailable && ticket.seatPrices.none { it.remaining > 0 }) return@filter false
-                    if (!checkTrainTypeMatch(ticket)) return@filter false
-                    if (!isTimeInRange(ticket.departure, selectedDepartureRange)) return@filter false
-                    if (!isTimeInRange(ticket.arrival, selectedArrivalRange)) return@filter false
+                    if (!TrainQueryEngine.checkTrainTypeMatch(ticket, onlyHighSpeed, onlyDongche, onlyNormalTrain)) return@filter false
+                    if (!TrainQueryEngine.isTimeInRange(ticket.departure, selectedDepartureRange)) return@filter false
+                    if (!TrainQueryEngine.isTimeInRange(ticket.arrival, selectedArrivalRange)) return@filter false
                     true
                 }
-                result = sortTickets(result)
+                result = TrainQueryEngine.sortTickets(result, sortType, ascending, fromStation, toStation, queryTab)
                 result
             }
 
@@ -417,12 +285,12 @@ fun PurchaseScreen(user: User) {
                 // 应用筛选
                 result = result.filter { ticket ->
                     if (onlyAvailable && ticket.seatPrices.none { it.remaining > 0 }) return@filter false
-                    if (!checkTrainTypeMatch(ticket)) return@filter false
-                    if (!isTimeInRange(ticket.departure, selectedDepartureRange)) return@filter false
-                    if (!isTimeInRange(ticket.arrival, selectedArrivalRange)) return@filter false
+                    if (!TrainQueryEngine.checkTrainTypeMatch(ticket, onlyHighSpeed, onlyDongche, onlyNormalTrain)) return@filter false
+                    if (!TrainQueryEngine.isTimeInRange(ticket.departure, selectedDepartureRange)) return@filter false
+                    if (!TrainQueryEngine.isTimeInRange(ticket.arrival, selectedArrivalRange)) return@filter false
                     true
                 }
-                result = sortTickets(result)
+                result = TrainQueryEngine.sortTickets(result, sortType, ascending, fromStation, toStation, queryTab)
                 result
             }
 
@@ -431,20 +299,20 @@ fun PurchaseScreen(user: User) {
                 // 应用筛选
                 result = result.filter { ticket ->
                     if (onlyAvailable && ticket.seatPrices.none { it.remaining > 0 }) return@filter false
-                    if (!checkTrainTypeMatch(ticket)) return@filter false
-                    if (!isTimeInRange(ticket.departure, selectedDepartureRange)) return@filter false
-                    if (!isTimeInRange(ticket.arrival, selectedArrivalRange)) return@filter false
+                    if (!TrainQueryEngine.checkTrainTypeMatch(ticket, onlyHighSpeed, onlyDongche, onlyNormalTrain)) return@filter false
+                    if (!TrainQueryEngine.isTimeInRange(ticket.departure, selectedDepartureRange)) return@filter false
+                    if (!TrainQueryEngine.isTimeInRange(ticket.arrival, selectedArrivalRange)) return@filter false
                     true
                 }
-                result = sortTickets(result)
+                result = TrainQueryEngine.sortTickets(result, sortType, ascending, fromStation, toStation, queryTab)
                 result
             }
         }
     }
 
     /* ================= Firebase加载 ================= */
-    LaunchedEffect(Unit) {
-        db.child("trains").addValueEventListener(object : ValueEventListener {
+    DisposableEffect(Unit) {
+        val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 tickets.clear()
                 snapshot.children.forEach {
@@ -455,7 +323,12 @@ fun PurchaseScreen(user: User) {
                 applyFilter()
             }
             override fun onCancelled(error: DatabaseError) {}
-        })
+        }
+        val ref = db.child("trains")
+        ref.addValueEventListener(listener)
+        onDispose {
+            ref.removeEventListener(listener)
+        }
     }
 
     /* ================= UI(优化版本）================= */
@@ -836,7 +709,7 @@ fun PurchaseScreen(user: User) {
                         onSeatSelectChange = { selectingSeatFor = it },
                         user = user,
                         db = db,
-                        passengerSegment = ::passengerSegment
+                        passengerSegment = TrainQueryEngine::passengerSegment
                     )
                 }
             }
@@ -880,7 +753,7 @@ fun PurchaseScreen(user: User) {
                             ) {
                                 Text("中转：${p.transferStation}", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 Text(
-                                    "等待：${transferGap(p.first, p.second, p.transferStation)}",
+                                    "等待：${TrainQueryEngine.transferGap(p.first, p.second, p.transferStation)}",
                                     fontSize = 10.sp,
                                     color = Color.Gray
                                 )
@@ -898,7 +771,7 @@ fun PurchaseScreen(user: User) {
                                 onSeatSelectChange = { selectingSeatFor = it },
                                 user = user,
                                 db = db,
-                                passengerSegment = ::passengerSegment
+                                passengerSegment = TrainQueryEngine::passengerSegment
                             )
 
                             TrainCard(
@@ -912,7 +785,7 @@ fun PurchaseScreen(user: User) {
                                 onSeatSelectChange = { selectingSeatFor = it },
                                 user = user,
                                 db = db,
-                                passengerSegment = ::passengerSegment
+                                passengerSegment = TrainQueryEngine::passengerSegment
                             )
                         }
                     }

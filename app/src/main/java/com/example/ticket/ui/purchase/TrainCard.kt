@@ -14,11 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.Transaction
-import com.google.firebase.database.ValueEventListener
 
 @Composable
 fun TrainCard(
@@ -183,48 +179,19 @@ fun TrainCard(
                                     stops = t.stops
                                 )
 
-                                // 先找到车次节点，再对 seatPrices 执行事务扣减
-                                db.child("trains")
-                                    .orderByChild("id")
-                                    .equalTo(t.id)
-                                    .addListenerForSingleValueEvent(object : ValueEventListener {
-                                        override fun onDataChange(snapshot: DataSnapshot) {
-                                            val trainRef = snapshot.children.firstOrNull()?.ref ?: return
-                                            val seatRef = trainRef.child("seatPrices")
-
-                                            seatRef.runTransaction(object : com.google.firebase.database.Transaction.Handler {
-                                                override fun doTransaction(currentData: com.google.firebase.database.MutableData): com.google.firebase.database.Transaction.Result {
-                                                    val seats = currentData.children.mapNotNull {
-                                                        it.getValue(SeatPrice::class.java)
-                                                    }.toMutableList()
-                                                    val idx = seats.indexOfFirst { it.type == seat.type }
-                                                    if (idx == -1 || seats[idx].remaining <= 0) {
-                                                        return com.google.firebase.database.Transaction.abort()
-                                                    }
-                                                    seats[idx] = seats[idx].copy(remaining = seats[idx].remaining - 1)
-                                                    currentData.value = seats
-                                                    return com.google.firebase.database.Transaction.success(currentData)
-                                                }
-                                                override fun onComplete(
-                                                    error: com.google.firebase.database.DatabaseError?,
-                                                    committed: Boolean,
-                                                    snap: com.google.firebase.database.DataSnapshot?
-                                                ) {
-                                                    if (committed) {
-                                                        // 库存扣减成功 → 创建订单
-                                                        db.child("orders")
-                                                            .child(user.username)
-                                                            .child(orderId)
-                                                            .setValue(order)
-                                                        showDetailDialog = false
-                                                        onSeatSelectChange(null)
-                                                    }
-                                                    // 如果事务中止（库存不足），静默失败
-                                                }
-                                            })
-                                        }
-                                        override fun onCancelled(error: DatabaseError) {}
-                                    })
+                                TrainRepository.updateSeatAvailability(
+                                    db, t.id, seat.type, -1,
+                                    onSuccess = {
+                                        // 库存扣减成功 → 创建订单
+                                        db.child("orders")
+                                            .child(user.username)
+                                            .child(orderId)
+                                            .setValue(order)
+                                        showDetailDialog = false
+                                        onSeatSelectChange(null)
+                                    }
+                                    // 库存不足时静默失败
+                                )
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = seat.remaining > 0,

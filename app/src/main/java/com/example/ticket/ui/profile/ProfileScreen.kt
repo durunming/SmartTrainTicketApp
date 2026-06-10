@@ -42,8 +42,8 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
     val db = FirebaseDatabase.getInstance().reference
 
     // 加载用户订单统计
-    LaunchedEffect(Unit) {
-        db.child("orders").child(user.username).addValueEventListener(object : ValueEventListener {
+    DisposableEffect(Unit) {
+        val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 var total = 0
                 var pending = 0
@@ -61,7 +61,12 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                 completedOrders = completed
             }
             override fun onCancelled(error: DatabaseError) {}
-        })
+        }
+        val ref = db.child("orders").child(user.username)
+        ref.addValueEventListener(listener)
+        onDispose {
+            ref.removeEventListener(listener)
+        }
     }
 
     Column(

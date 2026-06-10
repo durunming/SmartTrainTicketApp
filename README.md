@@ -86,22 +86,32 @@ ticket/
 │           ├── data/
 │           │   ├── model/
 │           │   │   └── TicketModels.kt   # 数据模型定义
+│           │   ├── PriceCalculator.kt    # 票价计算引擎
 │           │   ├── RailNetwork.kt        # 全国铁路线路数据
 │           │   ├── TrainDataGenerator.kt # 车次数据生成器
-│           │   ├── PriceCalculator.kt    # 票价计算引擎
+│           │   ├── TrainQueryEngine.kt   # 查询引擎（筛选/排序/换乘）
+│           │   ├── TrainRepository.kt    # 库存操作仓库（原子事务）
 │           │   └── TrainUploader.kt      # Firebase 上传服务
 │           └── ui/
 │               ├── TrainTicketApp.kt     # 应用根 Composable
 │               ├── theme/                # Material 3 主题
 │               ├── auth/AuthScreen.kt    # 登录注册页面
 │               ├── main/MainScreen.kt    # 主页面（底部导航）
-│               ├── purchase/             # 车票查询与购买
-│               ├── orders/               # 订单管理
-│               ├── profile/              # 个人中心
-│               └── admin/                # 管理员面板
+│               ├── purchase/
+│               │   ├── PurchaseScreen.kt    # 车票查询与购买
+│               │   ├── PurchaseViewModel.kt # 购票 ViewModel
+│               │   └── TrainCard.kt         # 车次卡片组件
+│               ├── orders/OrdersScreen.kt   # 订单管理
+│               ├── profile/ProfileScreen.kt # 个人中心
+│               └── admin/
+│                   ├── AdminScreen.kt       # 管理面板入口
+│                   ├── AdminOrdersTab.kt    # 订单管理
+│                   ├── AdminTrainsTab.kt    # 车次管理
+│                   └── AdminStatsTab.kt     # 运营统计
 ├── build.gradle.kts              # 项目级构建配置
 ├── gradle/libs.versions.toml     # 版本目录
-└── settings.gradle.kts
+├── settings.gradle.kts
+└── stress_test.py                # Firebase 并发压力测试
 ```
 
 ## 票价计算规则
@@ -146,6 +156,23 @@ ticket/
 - **订单管理** — 查看全部用户订单，按状态筛选，删除订单
 - **车次管理** — 搜索、编辑、删除车次数据，添加新车次
 - **统计面板** — 总订单数、各状态分布、热门线路排行等运营数据
+
+## 压力测试
+
+项目根目录下的 `stress_test.py` 用于对 Firebase Realtime Database 进行并发压力测试：
+
+```bash
+pip install requests
+python stress_test.py --concurrency 20 --rounds 5 --mode all
+```
+
+测试模式：
+- `read` — 并发读取 trains 节点，统计延迟分布
+- `write` — 并发写入测试数据，检测吞吐量
+- `stock` — 模拟多用户同时抢票，验证库存事务的最终一致性
+- `all` — 依次运行以上全部测试
+
+输出 P50/P90/P99 延迟报告和 QPS 统计。
 
 ## 许可证
 

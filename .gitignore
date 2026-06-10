@@ -18,3 +18,4 @@ app/google-services.json
 # AI 配置文件
 .codewhale/
 .deepseek/
+HANDOFF.md

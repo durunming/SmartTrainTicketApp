@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.Transaction
 import com.google.firebase.database.ValueEventListener
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -184,44 +183,26 @@ fun OrdersScreen(user: User) {
 
                                     Button(
                                         onClick = {
-                                            // 先通过事务原子恢复库存，成功后再取消订单
-                                            db.child("trains")
-                                                .orderByChild("id")
-                                                .equalTo(o.trainId)
-                                                .addListenerForSingleValueEvent(object : ValueEventListener {
-                                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                                        val trainRef = snapshot.children.firstOrNull()?.ref ?: return
-                                                        val seatRef = trainRef.child("seatPrices")
-
-                                                        seatRef.runTransaction(object : com.google.firebase.database.Transaction.Handler {
-                                                            override fun doTransaction(currentData: com.google.firebase.database.MutableData): com.google.firebase.database.Transaction.Result {
-                                                                val seats = currentData.children.mapNotNull {
-                                                                    it.getValue(SeatPrice::class.java)
-                                                                }.toMutableList()
-                                                                val idx = seats.indexOfFirst { it.type == o.seatType }
-                                                                if (idx == -1) return com.google.firebase.database.Transaction.abort()
-                                                                seats[idx] = seats[idx].copy(remaining = seats[idx].remaining + 1)
-                                                                currentData.value = seats
-                                                                return com.google.firebase.database.Transaction.success(currentData)
-                                                            }
-                                                            override fun onComplete(
-                                                                error: com.google.firebase.database.DatabaseError?,
-                                                                committed: Boolean,
-                                                                snap: com.google.firebase.database.DataSnapshot?
-                                                            ) {
-                                                                if (committed) {
-                                                                    // 库存恢复成功 → 取消订单
-                                                                    db.child("orders")
-                                                                        .child(user.username)
-                                                                        .child(o.orderId)
-                                                                        .child("status")
-                                                                        .setValue("已取消")
-                                                                }
-                                                            }
-                                                        })
-                                                    }
-                                                    override fun onCancelled(error: DatabaseError) {}
-                                                })
+                                            // 原子恢复库存，成功后取消订单
+                                            TrainRepository.updateSeatAvailability(
+                                                db, o.trainId, o.seatType, 1,
+                                                onSuccess = {
+                                                    // 库存恢复成功 → 取消订单
+                                                    db.child("orders")
+                                                        .child(user.username)
+                                                        .child(o.orderId)
+                                                        .child("status")
+                                                        .setValue("已取消")
+                                                },
+                                                onFailure = {
+                                                    // 恢复失败时直接取消订单（不恢复库存）
+                                                    db.child("orders")
+                                                        .child(user.username)
+                                                        .child(o.orderId)
+                                                        .child("status")
+                                                        .setValue("已取消")
+                                                }
+                                            )
                                         },
                                         modifier = Modifier.weight(1f).height(40.dp),
                                         shape = MaterialTheme.shapes.small,
