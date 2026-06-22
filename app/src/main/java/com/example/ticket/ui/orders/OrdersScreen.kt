@@ -6,7 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -24,6 +23,7 @@ import com.example.ticket.ui.theme.SuccessSoft
 import com.example.ticket.ui.theme.WarningSoft
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,6 +39,8 @@ fun OrdersScreen(user: User) {
     val timeFormat = remember {
         SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
     }
+
+    val scope = rememberCoroutineScope()
 
     DisposableEffect(Unit) {
         val listener = object : ValueEventListener {
@@ -190,18 +192,17 @@ fun OrdersScreen(user: User) {
 
                                     Button(
                                         onClick = {
-                                            // 原子恢复库存，成功后取消订单
-                                            TrainRepository.updateSeatAvailability(
-                                                db, o.trainId, o.seatType, 1,
-                                                onSuccess = {
-                                                    // 库存恢复成功 → 取消订单
+                                            scope.launch {
+                                                val result = TrainRepository.updateSeatAvailability(
+                                                    db, o.trainId, o.seatType, 1
+                                                )
+                                                if (result.isSuccess) {
                                                     db.child("orders")
                                                         .child(user.username)
                                                         .child(o.orderId)
                                                         .child("status")
                                                         .setValue("已取消")
-                                                },
-                                                onFailure = {
+                                                } else {
                                                     // 恢复失败时直接取消订单（不恢复库存）
                                                     db.child("orders")
                                                         .child(user.username)
@@ -209,7 +210,7 @@ fun OrdersScreen(user: User) {
                                                         .child("status")
                                                         .setValue("已取消")
                                                 }
-                                            )
+                                            }
                                         },
                                         modifier = Modifier.weight(1f).height(40.dp),
                                         shape = MaterialTheme.shapes.small,

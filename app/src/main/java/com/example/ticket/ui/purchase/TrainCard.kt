@@ -15,6 +15,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.database.DatabaseReference
+import kotlinx.coroutines.launch
 
 @Composable
 fun TrainCard(
@@ -36,6 +37,7 @@ fun TrainCard(
 ) {
 
     var showDetailDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val displayFrom = if (queryTab == 0 && fromStation.isNotBlank()) fromStation else t.from
     val displayTo = if (queryTab == 0 && toStation.isNotBlank()) toStation else t.to
@@ -179,9 +181,11 @@ fun TrainCard(
                                     stops = t.stops
                                 )
 
-                                TrainRepository.updateSeatAvailability(
-                                    db, t.id, seat.type, -1,
-                                    onSuccess = {
+                                scope.launch {
+                                    val result = TrainRepository.updateSeatAvailability(
+                                        db, t.id, seat.type, -1
+                                    )
+                                    if (result.isSuccess) {
                                         // 库存扣减成功 → 创建订单
                                         db.child("orders")
                                             .child(user.username)
@@ -191,7 +195,7 @@ fun TrainCard(
                                         onSeatSelectChange(null)
                                     }
                                     // 库存不足时静默失败
-                                )
+                                }
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = seat.remaining > 0,

@@ -1,7 +1,5 @@
 package com.example.ticket
 
-import android.os.Handler
-import android.os.Looper
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,6 +26,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -50,6 +51,7 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
     var showLogoutDialog by remember { mutableStateOf(false) }
 
     val db = FirebaseDatabase.getInstance().reference
+    val scope = rememberCoroutineScope()
 
     // 加载用户订单统计
     DisposableEffect(Unit) {
@@ -205,25 +207,22 @@ fun ProfileScreen(user: User, onLogout: () -> Unit) {
                 // 更新数据按钮
                 Button(
                     onClick = {
-                        loading = true
-                        status = "更新铁路数据中..."
-
-                        Thread {
+                        scope.launch {
+                            loading = true
+                            status = "更新铁路数据中..."
                             try {
                                 val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                                val data = RealRailGenerator.generateBatchForDays(date, 3)
+                                val data = withContext(Dispatchers.Default) {
+                                    RealRailGenerator.generateBatchForDays(date, 3)
+                                }
                                 TrainFirebaseService.uploadAll(data)
-                                Handler(Looper.getMainLooper()).post {
-                                    status = "更新完成：${data.size}条"
-                                    loading = false
-                                }
+                                status = "更新完成：${data.size}条"
                             } catch (e: Exception) {
-                                Handler(Looper.getMainLooper()).post {
-                                    status = "更新失败：${e.message}"
-                                    loading = false
-                                }
+                                status = "更新失败：${e.message}"
+                            } finally {
+                                loading = false
                             }
-                        }.start()
+                        }
                     },
                     enabled = !loading,
                     modifier = Modifier.fillMaxWidth(),

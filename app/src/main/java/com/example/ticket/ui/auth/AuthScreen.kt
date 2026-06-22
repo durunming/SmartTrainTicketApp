@@ -14,6 +14,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.database.Transaction
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun AuthScreen(onLoginSuccess: (User) -> Unit) {
@@ -26,6 +28,8 @@ fun AuthScreen(onLoginSuccess: (User) -> Unit) {
     var msg by remember { mutableStateOf("") }
 
     var passwordVisible by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     Box(
         Modifier.fillMaxSize(),
@@ -83,16 +87,19 @@ fun AuthScreen(onLoginSuccess: (User) -> Unit) {
                         val ref = db.child(username)
 
                         if (isLogin) {
-                            // 登录逻辑
-                            ref.get().addOnSuccessListener { snapshot ->
-                                val pwd = snapshot.child("password").value?.toString()
-                                if (pwd == password) {
-                                    onLoginSuccess(User(username, password))
-                                } else {
-                                    msg = "用户名或密码错误"
+                            // 登录逻辑：使用协程 + await()
+                            scope.launch {
+                                try {
+                                    val snap = ref.get().await()
+                                    val pwd = snap.child("password").value?.toString()
+                                    if (pwd == password) {
+                                        onLoginSuccess(User(username, password))
+                                    } else {
+                                        msg = "用户名或密码错误"
+                                    }
+                                } catch (e: Exception) {
+                                    msg = "网络错误，请重试"
                                 }
-                            }.addOnFailureListener {
-                                msg = "网络错误，请重试"
                             }
                         } else {
                             // 注册逻辑：使用事务确保原子性，防止并发重名

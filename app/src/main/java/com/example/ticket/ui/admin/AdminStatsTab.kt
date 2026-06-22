@@ -23,8 +23,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
-import android.os.Handler
-import android.os.Looper
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -39,6 +40,8 @@ fun AdminStatsScreen(db: DatabaseReference) {
     var pendingOrders by remember { mutableStateOf(0) }
     var totalUsers by remember { mutableStateOf(0) }
     var totalTrains by remember { mutableStateOf(0) }
+
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         // 统计订单
@@ -148,15 +151,17 @@ fun AdminStatsScreen(db: DatabaseReference) {
         // 批量生成按钮
         Button(
             onClick = {
-                Thread {
+                scope.launch {
                     try {
                         val date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
-                        val data = RealRailGenerator.generateBatch(date)
+                        val data = withContext(Dispatchers.Default) {
+                            RealRailGenerator.generateBatch(date)
+                        }
                         TrainFirebaseService.uploadAll(data)
                     } catch (e: Exception) {
                         e.printStackTrace()
                     }
-                }.start()
+                }
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(containerColor = Warning),

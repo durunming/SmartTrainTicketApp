@@ -4,7 +4,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.Transaction
-import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * 列车数据仓库 — 封装 Firebase 车次/库存操作，保证原子性。
@@ -18,25 +20,22 @@ object TrainRepository {
      * @param trainId   车次 ID（如 "G101"）
      * @param seatType  座位类型（"二等座" / "一等座" / "无座"）
      * @param delta     库存变化量：-1 扣减，+1 恢复
-     * @param onSuccess 事务提交成功后回调
-     * @param onFailure 事务失败后回调，error 可能为 null（表示库存不足/座位不存在）
+     * @return Result<Unit> — 成功或失败（库存不足/车次不存在/网络错误）
      */
-    fun updateSeatAvailability(
+    suspend fun updateSeatAvailability(
         db: DatabaseReference,
         trainId: String,
         seatType: String,
-        delta: Int,
-        onSuccess: () -> Unit,
-        onFailure: (String?) -> Unit = {}
-    ) {
+        delta: Int
+    ): Result<Unit> = suspendCancellableCoroutine { continuation ->
         db.child("trains")
             .orderByChild("id")
             .equalTo(trainId)
-            .addListenerForSingleValueEvent(object : ValueEventListener {
+            .addListenerForSingleValueEvent(object : com.google.firebase.database.ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val trainRef = snapshot.children.firstOrNull()?.ref
                     if (trainRef == null) {
-                        onFailure("车次不存在")
+                        continuation.resume(Result.failure(Exception("车次不存在")))
                         return
                     }
                     val seatRef = trainRef.child("seatPrices")
@@ -64,16 +63,20 @@ object TrainRepository {
                             snap: DataSnapshot?
                         ) {
                             if (committed) {
-                                onSuccess()
+                                continuation.resume(Result.success(Unit))
                             } else {
-                                onFailure(error?.message)
+                                continuation.resume(
+                                    Result.failure(
+                                        Exception(error?.message ?: "库存不足或座位不存在")
+                                    )
+                                )
                             }
                         }
                     })
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    onFailure(error.message)
+                    continuation.resume(Result.failure(Exception(error.message)))
                 }
             })
     }

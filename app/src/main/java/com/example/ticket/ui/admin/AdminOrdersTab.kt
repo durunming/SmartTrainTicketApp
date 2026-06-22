@@ -26,6 +26,7 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,6 +41,8 @@ fun AdminOrdersScreen(db: DatabaseReference) {
     var filter by remember { mutableStateOf("全部") }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var orderToDelete by remember { mutableStateOf<Pair<String, Order>?>(null) }
+
+    val scope = rememberCoroutineScope()
 
     DisposableEffect(Unit) {
         val listener = object : ValueEventListener {
@@ -190,23 +193,24 @@ fun AdminOrdersScreen(db: DatabaseReference) {
                                     // 取消按钮（回补库存）
                                     Button(
                                         onClick = {
-                                            TrainRepository.updateSeatAvailability(
-                                                db, order.trainId, order.seatType, 1,
-                                                onSuccess = {
+                                            scope.launch {
+                                                val result = TrainRepository.updateSeatAvailability(
+                                                    db, order.trainId, order.seatType, 1
+                                                )
+                                                if (result.isSuccess) {
                                                     db.child("orders")
                                                         .child(userName)
                                                         .child(order.orderId)
                                                         .child("status")
                                                         .setValue("已取消")
-                                                },
-                                                onFailure = {
+                                                } else {
                                                     db.child("orders")
                                                         .child(userName)
                                                         .child(order.orderId)
                                                         .child("status")
                                                         .setValue("已取消")
                                                 }
-                                            )
+                                            }
                                         },
                                         modifier = Modifier.weight(1f).height(36.dp),
                                         colors = ButtonDefaults.buttonColors(
@@ -234,23 +238,24 @@ fun AdminOrdersScreen(db: DatabaseReference) {
                                     // 取消并退款按钮
                                     Button(
                                         onClick = {
-                                            TrainRepository.updateSeatAvailability(
-                                                db, order.trainId, order.seatType, 1,
-                                                onSuccess = {
+                                            scope.launch {
+                                                val result = TrainRepository.updateSeatAvailability(
+                                                    db, order.trainId, order.seatType, 1
+                                                )
+                                                if (result.isSuccess) {
                                                     db.child("orders")
                                                         .child(userName)
                                                         .child(order.orderId)
                                                         .child("status")
                                                         .setValue("已取消")
-                                                },
-                                                onFailure = {
+                                                } else {
                                                     db.child("orders")
                                                         .child(userName)
                                                         .child(order.orderId)
                                                         .child("status")
                                                         .setValue("已取消")
                                                 }
-                                            )
+                                            }
                                         },
                                         modifier = Modifier.weight(1f).height(36.dp),
                                         colors = ButtonDefaults.buttonColors(
